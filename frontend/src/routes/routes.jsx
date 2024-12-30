@@ -1,4 +1,4 @@
-// routes/routes.js
+// routes/routes.jsx
 import { createBrowserRouter } from 'react-router-dom';
 import MainLayout from '../components/layout/MainLayout';
 import LoginForm from '../components/auth/LoginForm';
@@ -10,7 +10,7 @@ import Dashboard from "@/components/dashboard/Dashboard.jsx";
 import RoleManagement from "@/components/roles/RoleManagement.jsx";
 import UserPermissions from "@/components/users/UserPermissions.jsx";
 
-// Updated routes.js
+// Updated routes.jsx
 export const router = createBrowserRouter([
     {
         path: '/',
