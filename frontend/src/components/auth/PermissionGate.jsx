@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import axiosInstance from '@/lib/axios';
 import { API_BASE_URL } from '@/config/api';
 
-const PermissionGate = ({ children, requiredPermissions }) => {
+const PermissionGate = ({ children, requiredPermission }) => {
     const { user } = useSelector(state => state.auth);
     const [permissions, setPermissions] = useState([]);
 
@@ -21,12 +21,7 @@ const PermissionGate = ({ children, requiredPermissions }) => {
         fetchPermissions();
     }, [user?.role]);
 
-    // Check if user has all required permissions
-    const hasPermissions = Array.isArray(requiredPermissions)
-        ? requiredPermissions.every(permission => permissions.includes(permission))
-        : permissions.includes(requiredPermissions);
-
-    if (!hasPermissions) {
+    if (!permissions.includes(requiredPermission)) {
         return null;
     }
 

@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { cn } from "@/lib/utils";
-import PermissionGate from '@/components/auth/PermissionGate';
 
 const Sidebar = ({ open, onClose, isMobile }) => {
     const { user } = useSelector(state => state.auth);
@@ -20,19 +19,21 @@ const Sidebar = ({ open, onClose, isMobile }) => {
             icon: LayoutDashboard,
             label: 'Dashboard',
             path: '/dashboard',
-            // Everyone can see their dashboard
         },
         {
             icon: Users,
             label: 'Users',
             path: '/users',
-            permissions: ['READ_USER']
         },
         {
             icon: Shield,
             label: 'Role Management',
             path: '/roles',
-            permissions: ['CREATE_USER', 'UPDATE_USER', 'DELETE_USER']
+        },
+        {
+            icon: Settings,
+            label: 'Settings',
+            path: '/settings',
         }
     ];
 
@@ -53,27 +54,19 @@ const Sidebar = ({ open, onClose, isMobile }) => {
                         Student Management
                     </h2>
                     <nav className="space-y-1">
-                        {menuItems.map(({ icon: Icon, label, path, permissions }) => (
-                            permissions ? (
-                                <PermissionGate key={path} requiredPermissions={permissions}>
-                                    <SidebarItem
-                                        Icon={Icon}
-                                        label={label}
-                                        path={path}
-                                        isActive={location.pathname === path}
-                                        onClick={() => isMobile && onClose?.()}
-                                    />
-                                </PermissionGate>
-                            ) : (
-                                <SidebarItem
-                                    key={path}
-                                    Icon={Icon}
-                                    label={label}
-                                    path={path}
-                                    isActive={location.pathname === path}
-                                    onClick={() => isMobile && onClose?.()}
-                                />
-                            )
+                        {menuItems.map(({ icon: Icon, label, path }) => (
+                            <Link
+                                key={path}
+                                to={path}
+                                onClick={() => isMobile && onClose?.()}
+                                className={cn(
+                                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-gray-100",
+                                    location.pathname === path ? "bg-gray-100 text-gray-900" : "text-gray-500 hover:text-gray-900"
+                                )}
+                            >
+                                <Icon className="h-4 w-4" />
+                                {label}
+                            </Link>
                         ))}
                     </nav>
                 </div>
@@ -94,19 +87,5 @@ const Sidebar = ({ open, onClose, isMobile }) => {
         </aside>
     );
 };
-
-const SidebarItem = ({ Icon, label, path, isActive, onClick }) => (
-    <Link
-        to={path}
-        onClick={onClick}
-        className={cn(
-            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-gray-100",
-            isActive ? "bg-gray-100 text-gray-900" : "text-gray-500 hover:text-gray-900"
-        )}
-    >
-        <Icon className="h-4 w-4" />
-        {label}
-    </Link>
-);
 
 export default Sidebar;

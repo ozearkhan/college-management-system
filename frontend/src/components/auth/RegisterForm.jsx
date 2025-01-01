@@ -8,10 +8,12 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {setCredentials} from "@/store/authSlice.js";
+import axiosInstance from '@/lib/axios';
+import { endpoints } from '@/config/api';
 
 const RegisterForm = () => {
-    const dispatch = useDispatch();
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const [formData, setFormData] = useState({
         username: '',
         email: '',
@@ -20,21 +22,18 @@ const RegisterForm = () => {
     });
     const [roles, setRoles] = useState([]);
     const [error, setError] = useState('');
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         const fetchRoles = async () => {
             try {
-                setIsLoading(true);
-                const response = await fetch('http://localhost:5000/api/roles');
-                if (!response.ok) throw new Error('Failed to fetch roles');
-                const data = await response.json();
-                setRoles(data);
+                const response = await axiosInstance.get(endpoints.roles.list);
+                // Ensure we're setting an array of roles
+                setRoles(response.data || []);
             } catch (err) {
-                setError(err.message);
                 console.error('Error fetching roles:', err);
-            } finally {
-                setIsLoading(false);
+                setError('Failed to load roles. Please try again later.');
+                setRoles([]); // Ensure roles is always an array
             }
         };
         fetchRoles();
@@ -42,28 +41,20 @@ const RegisterForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsLoading(true);
         setError('');
-        
+
         try {
-            const response = await fetch('http://localhost:5000/api/auth/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
-            });
-
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message);
-
-            dispatch(setCredentials(data));
+            const response = await axiosInstance.post(endpoints.auth.register, formData);
+            dispatch(setCredentials(response.data));
+            localStorage.setItem('token', response.data.token);
             navigate('/dashboard');
         } catch (err) {
-            setError(err.message);
+            setError(err.response?.data?.message || 'Registration failed. Please try again.');
+        } finally {
+            setIsLoading(false);
         }
     };
-
-    if (isLoading) {
-        return <div>Loading roles...</div>;
-    }
 
     return (
         <Card className="w-full max-w-md mx-auto mt-8">
@@ -107,9 +98,12 @@ const RegisterForm = () => {
                                 <SelectValue placeholder="Select Role"/>
                             </SelectTrigger>
                             <SelectContent>
-                                {roles.map(role => (
-                                    <SelectItem key={role.role} value={role.role}>
-                                        {role.role}
+                                {Array.isArray(roles) && roles.map(role => (
+                                    <SelectItem 
+                                        key={role.role || role} 
+                                        value={role.role || role}
+                                    >
+                                        {role.role || role}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
@@ -120,8 +114,12 @@ const RegisterForm = () => {
                             <AlertDescription>{error}</AlertDescription>
                         </Alert>
                     )}
-                    <Button type="submit" className="w-full">
-                        Register
+                    <Button 
+                        type="submit" 
+                        className="w-full"
+                        disabled={isLoading}
+                    >
+                        {isLoading ? 'Registering...' : 'Register'}
                     </Button>
                 </form>
                 <p className="text-sm text-center mt-4">
