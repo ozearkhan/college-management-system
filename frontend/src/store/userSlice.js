@@ -53,16 +53,21 @@ export const deleteUser = createAsyncThunk('users/deleteUser', async (id, { reje
 });
 
 // Add createUser thunk
-export const createUser = createAsyncThunk('users/createUser', async (userData, { rejectWithValue }) => {
-    try {
-        const response = await axios.post(API_BASE_URL, userData, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        });
-        return response.data;
-    } catch (error) {
-        return rejectWithValue(error.response?.data || 'Failed to create user');
+export const createUser = createAsyncThunk(
+    'users/createUser',
+    async (userData, { rejectWithValue }) => {
+        try {
+            const response = await axios.post(API_BASE_URL, userData, {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+            });
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(
+                error.response?.data?.message || 'Failed to create user'
+            );
+        }
     }
-});
+);
 
 // User slice definition
 const userSlice = createSlice({
