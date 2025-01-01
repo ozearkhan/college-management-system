@@ -1,20 +1,13 @@
 // backend/routes/roleRoutes.js
 const express = require('express');
-const RoleController = require('../controllers/roleController');
-const authMiddleware = require('../middlewares/authMiddleware');
-
 const router = express.Router();
+const authMiddleware = require('../middlewares/authMiddleware');
+const { getRoles, getRolePermissions } = require('../controllers/roleController');
 
-// GET all roles with their permissions
-router.get('/',
-    authMiddleware,
-    RoleController.getRoles
-);
+// Public route for getting roles (needed for registration)
+router.get('/', getRoles);
 
-// GET permissions for a specific role
-router.get('/:role/permissions',
-    authMiddleware,
-    RoleController.getRolePermissions
-);
+// Protected routes
+router.get('/:role/permissions', authMiddleware, getRolePermissions);
 
 module.exports = router;

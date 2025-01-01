@@ -7,6 +7,13 @@ const { PERMISSIONS } = require('../config/rbac');
 
 const router = express.Router();
 
+// Add this new route for creating users
+router.post('/',
+    authMiddleware,
+    rbacMiddleware([PERMISSIONS.CREATE_USER]),
+    UserController.createUser
+);
+
 // GET all users (requires READ_USER permission)
 router.get('/',
     authMiddleware,

@@ -1,41 +1,33 @@
 // backend/controllers/roleController.js
-const { ROLES, PERMISSIONS, ROLE_PERMISSIONS } = require('../config/rbac');
+const { ROLES, ROLE_PERMISSIONS } = require('../config/rbac');
 
-class RoleController {
-    // Get all available roles
-    static getRoles(req, res) {
-        try {
-            const rolesWithPermissions = Object.entries(ROLE_PERMISSIONS).map(([role, permissions]) => ({
-                role,
-                permissions
-            }));
+const getRoles = async (req, res) => {
+    try {
+        // For registration, only return STUDENT and TEACHER roles
+        const publicRoles = Object.values(ROLES).filter(role => 
+            role === 'STUDENT' || role === 'TEACHER'
+        );
+        
+        const roles = publicRoles.map(role => ({ role }));
+        res.json(roles);
+    } catch (error) {
+        console.error('Error in getRoles:', error);
+        res.status(500).json({ message: 'Error fetching roles' });
+    }
+};
 
-            res.json(rolesWithPermissions);
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
+const getRolePermissions = async (req, res) => {
+    const { role } = req.params;
+    
+    if (!ROLES[role]) {
+        return res.status(404).json({ message: 'Role not found' });
     }
 
-    // Get permissions for a specific role
-    static getRolePermissions(req, res) {
-        try {
-            const { role } = req.params;
+    const permissions = ROLE_PERMISSIONS[role] || [];
+    res.json({ permissions });
+};
 
-            // Validate role
-            if (!Object.values(ROLES).includes(role)) {
-                return res.status(400).json({ error: 'Invalid role' });
-            }
-
-            const permissions = ROLE_PERMISSIONS[role] || [];
-
-            res.json({
-                role,
-                permissions
-            });
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
-    }
-}
-
-module.exports = RoleController;
+module.exports = {
+    getRoles,
+    getRolePermissions
+};

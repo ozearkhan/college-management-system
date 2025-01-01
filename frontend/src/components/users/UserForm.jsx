@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import RoleSelect from './RoleSelect';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import axiosInstance from '@/lib/axios';
 
 const UserForm = () => {
     const { id } = useParams();
@@ -56,8 +57,12 @@ const UserForm = () => {
                 if (!formData.password) {
                     throw new Error('Password is required for new users');
                 }
-                const result = await dispatch(createUser(formData)).unwrap();
-                if (!result) throw new Error('Failed to create user');
+                
+                const response = await axiosInstance.post('/users', formData);
+                
+                if (!response.data) {
+                    throw new Error('Failed to create user');
+                }
             }
             navigate('/users');
         } catch (err) {
