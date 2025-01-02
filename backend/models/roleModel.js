@@ -3,7 +3,6 @@ const db = require('../config/database');
 const { ROLES, PERMISSIONS } = require('../config/rbac');
 
 class RoleModel {
-    // Optional: More advanced role management methods
     static async createRole(roleName, description) {
         const [result] = await db.query(
             'INSERT INTO roles (name, description) VALUES (?, ?)',

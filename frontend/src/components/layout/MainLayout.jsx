@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import Header from './Header';
 import Sidebar from './Sidebar';
+import { cn } from '@/lib/utils';
 
 const MainLayout = () => {
     const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -24,39 +25,36 @@ const MainLayout = () => {
     };
 
     return (
-        <div className="flex h-screen overflow-hidden">
-            {/* Desktop sidebar */}
-            {!isMobile && (
-                <div className={`transition-all duration-300 ${sidebarOpen ? 'w-64' : 'w-0'}`}>
-                    <Sidebar 
-                        open={sidebarOpen} 
-                        onClose={() => setSidebarOpen(false)} 
-                        isMobile={isMobile}
-                    />
-                </div>
-            )}
+        <div className="flex min-h-screen flex-col">
+            {/* Fixed Header */}
+            <div className="fixed top-0 left-0 right-0 z-50">
+                <Header onMenuClick={toggleSidebar} />
+            </div>
             
-            {/* Mobile sidebar */}
-            {isMobile && (
+            <div className="flex pt-16"> {/* Add padding-top to account for fixed header */}
+                {/* Sidebar */}
                 <Sidebar 
                     open={sidebarOpen} 
                     onClose={() => setSidebarOpen(false)} 
                     isMobile={isMobile}
                 />
-            )}
-            
-            <div className="flex flex-col flex-1 overflow-hidden">
-                <Header onMenuClick={toggleSidebar} />
-                <main className="flex-1 overflow-y-auto bg-gray-50 p-4">
-                    {/* Overlay for mobile when sidebar is open */}
-                    {isMobile && sidebarOpen && (
-                        <div 
-                            className="fixed inset-0 bg-black/50 z-40 md:hidden"
-                            onClick={() => setSidebarOpen(false)}
-                        />
-                    )}
-                    <Outlet />
-                </main>
+                
+                {/* Main Content */}
+                <div className={cn(
+                    "flex-1 transition-all duration-300",
+                    sidebarOpen ? "ml-64" : "ml-16"
+                )}>
+                    <main className="p-4 bg-gray-50 min-h-[calc(100vh-4rem)]">
+                        {/* Overlay for mobile when sidebar is open */}
+                        {isMobile && sidebarOpen && (
+                            <div 
+                                className="fixed inset-0 bg-black/50 z-40 md:hidden"
+                                onClick={() => setSidebarOpen(false)}
+                            />
+                        )}
+                        <Outlet />
+                    </main>
+                </div>
             </div>
         </div>
     );
