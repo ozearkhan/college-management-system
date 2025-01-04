@@ -27,6 +27,45 @@ export const fetchRolePermissions = createAsyncThunk(
     }
 );
 
+export const createRole = createAsyncThunk(
+    'roles/createRole',
+    async (roleData, { rejectWithValue }) => {
+        try {
+            const response = await axiosInstance.post(`${API_BASE_URL}/roles`, roleData);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data || 'Failed to create role');
+        }
+    }
+);
+
+export const updateRole = createAsyncThunk(
+    'roles/updateRole',
+    async ({ roleId, data }, { rejectWithValue }) => {
+        try {
+            const response = await axiosInstance.put(`${API_BASE_URL}/roles/${roleId}`, data);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data || 'Failed to update role');
+        }
+    }
+);
+
+export const assignPermissions = createAsyncThunk(
+    'roles/assignPermissions',
+    async ({ roleId, permissions }, { rejectWithValue }) => {
+        try {
+            const response = await axiosInstance.post(
+                `${API_BASE_URL}/roles/${roleId}/permissions`,
+                { permissions }
+            );
+            return { roleId, permissions: response.data };
+        } catch (error) {
+            return rejectWithValue(error.response?.data || 'Failed to assign permissions');
+        }
+    }
+);
+
 const roleSlice = createSlice({
     name: 'roles',
     initialState: {
@@ -35,7 +74,11 @@ const roleSlice = createSlice({
         isLoading: false,
         error: null
     },
-    reducers: {},
+    reducers: {
+        clearError: (state) => {
+            state.error = null;
+        }
+    },
     extraReducers: (builder) => {
         builder
             .addCase(fetchRoles.pending, (state) => {
@@ -59,8 +102,25 @@ const roleSlice = createSlice({
             .addCase(fetchRolePermissions.rejected, (state, { payload }) => {
                 state.error = payload;
                 state.isLoading = false;
+            })
+            .addCase(createRole.pending, (state) => {
+                state.isLoading = true;
+            })
+            .addCase(createRole.fulfilled, (state) => {
+                state.isLoading = false;
+            })
+            .addCase(createRole.rejected, (state, { payload }) => {
+                state.error = payload;
+                state.isLoading = false;
+            })
+            .addCase(updateRole.fulfilled, (state, { payload }) => {
+                state.isLoading = false;
+            })
+            .addCase(assignPermissions.fulfilled, (state, { payload }) => {
+                state.rolePermissions[payload.roleId] = payload.permissions;
             });
     }
 });
 
+export const { clearError } = roleSlice.actions;
 export default roleSlice.reducer;
