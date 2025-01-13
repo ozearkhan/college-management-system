@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Plus, MoreHorizontal, Pencil, Key, Trash } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import PermissionGate from '@/components/auth/PermissionGate';
 
 const UserList = () => {
     const dispatch = useDispatch();
@@ -44,10 +45,12 @@ const UserList = () => {
         <div className="space-y-4">
             <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold">Users</h2>
-                <Button onClick={() => navigate('/users/new')}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add User
-                </Button>
+                <PermissionGate requiredPermissions={['CREATE_USER']}>
+                    <Button onClick={() => navigate('/users/new')}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add User
+                    </Button>
+                </PermissionGate>
             </div>
 
             {error && (
@@ -79,19 +82,21 @@ const UserList = () => {
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
-                                        <DropdownMenuItem
-                                            onClick={() => navigate(`/users/edit/${user.id}`)}
-                                        >
-                                            <Pencil className="h-4 w-4 mr-2" />
-                                            Edit
-                                        </DropdownMenuItem>
+                                        <PermissionGate requiredPermissions={['UPDATE_USER']}>
+                                            <DropdownMenuItem
+                                                onClick={() => navigate(`/users/edit/${user.id}`)}
+                                            >
+                                                <Pencil className="h-4 w-4 mr-2" />
+                                                Edit
+                                            </DropdownMenuItem>
+                                        </PermissionGate>
                                         <DropdownMenuItem
                                             onClick={() => navigate(`/users/${user.id}/permissions`)}
                                         >
                                             <Key className="h-4 w-4 mr-2" />
                                             Permissions
                                         </DropdownMenuItem>
-                                        {currentUser?.role === 'ADMIN' && (
+                                        <PermissionGate requiredPermissions={['DELETE_USER']}>
                                             <DropdownMenuItem
                                                 className="text-red-600"
                                                 onClick={() => handleDelete(user.id)}
@@ -99,7 +104,7 @@ const UserList = () => {
                                                 <Trash className="h-4 w-4 mr-2" />
                                                 Delete
                                             </DropdownMenuItem>
-                                        )}
+                                        </PermissionGate>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </TableCell>

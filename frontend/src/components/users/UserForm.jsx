@@ -1,4 +1,3 @@
-// components/users/UserForm.jsx
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -7,12 +6,15 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import RoleSelect from './RoleSelect';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import axiosInstance from '@/lib/axios';
 
 const UserForm = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const { currentUser, isLoading, error } = useSelector((state) => state.users);
+    const { currentUser, isLoading, error: userError } = useSelector((state) => state.users);
+    const [error, setError] = useState('');
 
     const [formData, setFormData] = useState({
         username: '',
@@ -33,22 +35,39 @@ const UserForm = () => {
                 username: currentUser.username,
                 email: currentUser.email,
                 role: currentUser.role,
-                password: '' // Don't populate password for security
+                password: ''
             });
         }
     }, [currentUser, id]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError('');
+
         try {
+            if (!formData.role) {
+                throw new Error('Role is required');
+            }
+
             if (id) {
-                await dispatch(updateUser({ id, userData: formData }));
+                const updateData = { ...formData };
+                if (!updateData.password) delete updateData.password;
+                await dispatch(updateUser({ id, userData: updateData })).unwrap();
             } else {
-                await dispatch(createUser(formData));
+                if (!formData.password) {
+                    throw new Error('Password is required for new users');
+                }
+                
+                const response = await axiosInstance.post('/users', formData);
+                
+                if (!response.data) {
+                    throw new Error('Failed to create user');
+                }
             }
             navigate('/users');
-        } catch (error) {
-            console.error('Error:', error);
+        } catch (err) {
+            setError(err.message || 'An error occurred');
+            console.error('Error:', err);
         }
     };
 
@@ -58,6 +77,11 @@ const UserForm = () => {
         <Card className="max-w-2xl mx-auto">
             <CardHeader>
                 <CardTitle>{id ? 'Edit User' : 'Create User'}</CardTitle>
+                {error && (
+                    <Alert variant="destructive">
+                        <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                )}
             </CardHeader>
             <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -65,7 +89,7 @@ const UserForm = () => {
                         <label>Username</label>
                         <Input
                             value={formData.username}
-                            onChange={(e) => setFormData(prev => ({
+                            onChange={(e) => setFormData((prev) => ({
                                 ...prev,
                                 username: e.target.value
                             }))}
@@ -78,7 +102,7 @@ const UserForm = () => {
                         <Input
                             type="email"
                             value={formData.email}
-                            onChange={(e) => setFormData(prev => ({
+                            onChange={(e) => setFormData((prev) => ({
                                 ...prev,
                                 email: e.target.value
                             }))}
@@ -92,7 +116,7 @@ const UserForm = () => {
                             <Input
                                 type="password"
                                 value={formData.password}
-                                onChange={(e) => setFormData(prev => ({
+                                onChange={(e) => setFormData((prev) => ({
                                     ...prev,
                                     password: e.target.value
                                 }))}
@@ -105,7 +129,7 @@ const UserForm = () => {
                         <label>Role</label>
                         <RoleSelect
                             value={formData.role}
-                            onChange={(value) => setFormData(prev => ({
+                            onChange={(value) => setFormData((prev) => ({
                                 ...prev,
                                 role: value
                             }))}

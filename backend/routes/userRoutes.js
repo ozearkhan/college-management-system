@@ -3,9 +3,19 @@ const express = require('express');
 const UserController = require('../controllers/userController');
 const authMiddleware = require('../middlewares/authMiddleware');
 const rbacMiddleware = require('../middlewares/rbacMiddleware');
-const { PERMISSIONS } = require('../config/rbac');
+const rbac = require('../config/rbac');
 
 const router = express.Router();
+
+// Get permissions object
+const PERMISSIONS = rbac.PERMISSIONS();
+
+// Add this new route for creating users
+router.post('/',
+    authMiddleware,
+    rbacMiddleware([PERMISSIONS.CREATE_USER]),
+    UserController.createUser
+);
 
 // GET all users (requires READ_USER permission)
 router.get('/',

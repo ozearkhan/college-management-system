@@ -92,6 +92,46 @@ class UserController {
             res.status(500).json({ error: error.message });
         }
     }
+
+    // Create user (requires CREATE_USER permission)
+    static async createUser(req, res) {
+        try {
+            const { username, email, password, role } = req.body;
+
+            // Validate input
+            if (!username || !email || !password || !role) {
+                return res.status(400).json({ error: 'Missing required fields' });
+            }
+
+            // Check if user already exists
+            const existingUser = await UserModel.findUserByEmail(email);
+            if (existingUser) {
+                return res.status(400).json({ error: 'User already exists' });
+            }
+
+            // Create user
+            const userId = await UserModel.createUser({
+                username,
+                email,
+                password,
+                role
+            });
+
+            const user = await UserModel.findUserById(userId);
+
+            res.status(201).json({
+                message: 'User created successfully',
+                user: {
+                    id: user.id,
+                    username: user.username,
+                    email: user.email,
+                    role: user.role
+                }
+            });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    }
 }
 
 module.exports = UserController;

@@ -1,19 +1,27 @@
-// backend/middlewares/rbacMiddleware.js
-const { ROLE_PERMISSIONS } = require('../config/rbac');
+const rbac = require('../config/rbac');
 
 const rbacMiddleware = (requiredPermissions) => {
     return (req, res, next) => {
-        const userRole = req.user.role;
+        try {
+            const userRole = req.user.role;
 
-        const hasPermission = requiredPermissions.every(permission =>
-            ROLE_PERMISSIONS[userRole]?.includes(permission)
-        );
+            // Get the dynamically loaded role permissions
+            const rolePermissions = rbac.getRolePermissions();
 
-        if (!hasPermission) {
-            return res.status(403).json({ error: 'Insufficient permissions' });
+            // Check if the user has all the required permissions
+            const hasPermission = requiredPermissions.every(permission =>
+                rolePermissions[userRole]?.includes(permission)
+            );
+
+            if (!hasPermission) {
+                return res.status(403).json({ error: 'Insufficient permissions' });
+            }
+
+            next();
+        } catch (error) {
+            console.error('Error in RBAC middleware:', error.message);
+            return res.status(500).json({ error: 'Internal server error' });
         }
-
-        next();
     };
 };
 
